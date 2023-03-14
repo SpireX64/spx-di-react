@@ -1,7 +1,7 @@
 import { PropsWithChildren } from 'react'
-import { renderHook } from '@testing-library/react'
+import { render, renderHook } from '@testing-library/react'
 import createDIContext from '../src'
-import { DIContainer, DIError, TypeMapOfContainer } from '../../spx-di'
+import { DIContainer, DIError, TypeMapOfContainer } from 'spx-di'
 
 function buildContainer(value: string) {
     return  DIContainer.builder<{
@@ -59,4 +59,27 @@ it('Test useDI hook', () => {
 
     // Expect -------------
     expect(result.current?.value).toBe(expectedValue)
+})
+
+it('Test withDI HOC', () => {
+    // Arrange
+    const expectedValue = 'FooBar'
+    const container = buildContainer(expectedValue)
+    const { DIContextProvider, withDI } = createDIContext<TypeMapOfContainer<typeof container>>()
+    const MockComponent = jest.fn(() => null)
+
+    const ContainerProvider = ({ children }: PropsWithChildren) => (
+        <DIContextProvider container={container}>
+            {children}
+        </DIContextProvider>
+    )
+    const WrappedComponent = withDI(r => ({
+        value: r.get('value'),
+    }))(MockComponent)
+
+    render(<WrappedComponent/>, { wrapper: ContainerProvider })
+
+    expect(MockComponent.mock.calls.length).toBe(1)
+    // @ts-ignore
+    expect(MockComponent.mock.calls[0]?.[0]?.value).toBe(expectedValue)
 })

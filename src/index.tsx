@@ -1,4 +1,11 @@
-import { createContext, PropsWithChildren, useContext, useMemo } from 'react'
+import {
+    ComponentType,
+    createContext,
+    PropsWithChildren,
+    ReactElement,
+    useContext,
+    useMemo,
+} from 'react'
 import {DIContainer, DIError} from 'spx-di'
 
 type TDIContainerProviderProps<TypeMap extends object> = {
@@ -25,9 +32,20 @@ function createDIContext<TypeMap extends object>() {
         return useMemo(() => inject(container), [])
     }
 
+    function withDI<TInject extends object>(injectToProps: TInjectFunction<TypeMap, TInject>) {
+        return function<TProps extends TInject>(OriginComponent: ComponentType<TProps>): ComponentType<Omit<TProps, keyof TInject>> {
+            return (props: Omit<TProps, keyof TInject>): ReactElement => {
+                const dependencies = useDI(injectToProps)
+                // @ts-ignore
+                return <OriginComponent {...dependencies} {...props}/>
+            }
+        }
+    }
+
     return {
         DIContextProvider,
         useDI,
+        withDI,
     }
 }
 
