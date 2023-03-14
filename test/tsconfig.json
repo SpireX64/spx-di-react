@@ -1,0 +1,16 @@
+{
+    "extends": "../tsconfig.json",
+    "include": [
+        "./**/*.ts",
+        "./**/*.tsx"
+    ],
+    "references": [
+        {
+            "path": "../src/",
+            "prepend": true
+        }
+    ],
+    "compilerOptions": {
+        "rootDir": "."
+    }
+}

@@ -7,6 +7,7 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "allowJs": false,
+    "jsx": "react-jsx",
     "emitBOM": false,
     "stripInternal": true,
     "noEmitOnError": true,
