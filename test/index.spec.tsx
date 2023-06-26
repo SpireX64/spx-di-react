@@ -1,7 +1,7 @@
-import { PropsWithChildren } from 'react'
+import { Component, PropsWithChildren } from 'react'
 import { render, renderHook } from '@testing-library/react'
+import { DIContainer, DIError, TypeMapOfContainer } from '@spirex/di'
 import createDIContext from '../src'
-import { DIContainer, DIError, TypeMapOfContainer } from 'spx-di'
 
 function buildContainer(value: string) {
     return  DIContainer.builder<{
@@ -25,7 +25,7 @@ it('Test useDI hook without context provider', () => {
             }));
         } catch (err) {
             if (err instanceof DIError) {
-                error = err
+                error = err as DIError
             }
         }
         return undefined
@@ -61,7 +61,7 @@ it('Test useDI hook', () => {
     expect(result.current?.value).toBe(expectedValue)
 })
 
-it('Test withDI HOC', () => {
+it('Test withDI HOC for func component', () => {
     // Arrange
     const expectedValue = 'FooBar'
     const container = buildContainer(expectedValue)
@@ -82,4 +82,31 @@ it('Test withDI HOC', () => {
     expect(MockComponent.mock.calls.length).toBe(1)
     // @ts-ignore
     expect(MockComponent.mock.calls[0]?.[0]?.value).toBe(expectedValue)
+})
+
+class TestClassComponent extends Component<{value: string}> {
+    public override render() {
+        return <span>{this.props.value}</span>
+    }
+}
+
+it('Test withDI HOC for class component', async () => {
+    // Arrange
+    const expectedValue = 'FooBar'
+    const container = buildContainer(expectedValue)
+    const { DIContextProvider, withDI } = createDIContext<TypeMapOfContainer<typeof container>>()
+
+    const ContainerProvider = ({ children }: PropsWithChildren) => (
+        <DIContextProvider container={container}>
+            {children}
+        </DIContextProvider>
+    )
+
+    const WrappedComponent = withDI(r => ({
+        value: r.get('value'),
+    }))(TestClassComponent)
+
+    const result = render(<WrappedComponent/>, { wrapper: ContainerProvider })
+    const renderedComponent = await result.findByText(expectedValue)
+    expect(renderedComponent).not.toBeUndefined()
 })
